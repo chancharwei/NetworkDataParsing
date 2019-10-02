@@ -11,19 +11,25 @@ import android.widget.Button;
 import androidx.fragment.app.Fragment;
 
 import com.example.chancharwei.networkdataparsing.R;
+import com.example.chancharwei.networkdataparsing.RetrofitClient;
+import com.example.chancharwei.networkdataparsing.networkInfo.NetworkAPI;
+import com.example.chancharwei.networkdataparsing.networkInfo.NetworkData;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link NetworkFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class NetworkFragment extends Fragment {
+public class NetworkFragment extends Fragment implements Callback<List<NetworkData>> {
     private static final String TAG = NetworkFragment.class.getSimpleName()+"ByronLog";
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
+    private NetworkAPI networkAPI;
     public NetworkFragment() {
         // Required empty public constructor
     }
@@ -42,10 +48,6 @@ public class NetworkFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            //mParam1 = getArguments().getString(ARG_PARAM1);
-            //mParam2 = getArguments().getString(ARG_PARAM2);
-        }
     }
 
     @Override
@@ -55,6 +57,20 @@ public class NetworkFragment extends Fragment {
         // Inflate the layout for this fragment
         View root = inflater.inflate(R.layout.fragment_network, container, false);
         return root;
+    }
+
+    @Override
+    public void onResume() {
+        Log.i(TAG,"onResume");
+        super.onResume();
+        networkSearch();
+    }
+
+    private void networkSearch() {
+        Retrofit retrofit = RetrofitClient.getInstance();
+        networkAPI = retrofit.create(NetworkAPI.class);
+        Call<List<NetworkData>> neetworkCall = networkAPI.getNetworkData();
+        neetworkCall.enqueue(this);
     }
 
 
@@ -70,4 +86,18 @@ public class NetworkFragment extends Fragment {
         super.onDetach();
     }
 
+    @Override
+    public void onResponse(Call<List<NetworkData>> call, Response<List<NetworkData>> response) {
+        Log.i(TAG,"response code "+response.code());
+        List<NetworkData> networkData = response.body();
+        Log.i(TAG,"networkData length = "+networkData.size());
+        for(NetworkData eachData : networkData) {
+            //Log.i(TAG,"albumID = "+eachData.getId());
+        }
+    }
+
+    @Override
+    public void onFailure(Call<List<NetworkData>> call, Throwable t) {
+
+    }
 }
