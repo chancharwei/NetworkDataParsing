@@ -5,7 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcel;
@@ -14,6 +14,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -21,22 +23,16 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.chancharwei.networkdataparsing.MainActivity;
 import com.example.chancharwei.networkdataparsing.R;
-import com.example.chancharwei.networkdataparsing.fragments.NetworkFragment;
 import com.example.chancharwei.networkdataparsing.networkInfo.NetworkData;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-import java.util.logging.LogRecord;
-
-import retrofit2.http.HTTP;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.RecyclerViewHolder> {
     private static final String TAG = RecyclerViewAdapter.class.getSimpleName()+"[ByronLog]";
@@ -57,11 +53,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(layoutIdForListItem, parent, false);
+
         return new RecyclerViewHolder(view);
     }
 
+
     @Override
-    public void onBindViewHolder(@NonNull RecyclerViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull final RecyclerViewHolder holder, int position) {
         Log.i(TAG, "onBindVIewHolder ("+ position+")");
         NetworkData[] eachData = mNetworkData.get(position);
         for(int i=0; i<holder.constraintLayoutsGroup.length;i++) {
@@ -73,10 +71,10 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }
     }
 
+
     @Override
     public int getItemCount() {
         if(mNetworkData != null) {
-            Log.i(TAG,"data size "+mNetworkData.size());
             return mNetworkData.size();
         }else {
             return 0;
@@ -141,7 +139,28 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
             constraintLayout4 = itemView.findViewById(R.id.layoutView4);
             constraintLayoutsGroup[3] = constraintLayout4;
+            monitorViewChange();
+        }
 
+        void monitorViewChange() {
+            //If view change,we can get correct width and set height with width value
+            final ViewTreeObserver observer = constraintLayout1.getViewTreeObserver();
+            observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    int width = constraintLayout1.getWidth();
+                    //modify height as same as width
+                    constraintLayout1.setLayoutParams(new LinearLayout.LayoutParams(width,width));
+                    constraintLayout2.setLayoutParams(new LinearLayout.LayoutParams(width,width));
+                    constraintLayout3.setLayoutParams(new LinearLayout.LayoutParams(width,width));
+                    constraintLayout4.setLayoutParams(new LinearLayout.LayoutParams(width,width));
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                        constraintLayout1.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    } else {
+                        constraintLayout1.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                    }
+                }
+            });
         }
     }
 
