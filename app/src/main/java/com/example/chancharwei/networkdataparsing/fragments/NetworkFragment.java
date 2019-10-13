@@ -13,6 +13,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -73,6 +75,7 @@ public class NetworkFragment extends Fragment implements Callback<List<NetworkDa
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
         recyclerViewAdapter = new RecyclerViewAdapter(getActivity(),this);
+        networkSearch();
         return root;
     }
 
@@ -80,7 +83,7 @@ public class NetworkFragment extends Fragment implements Callback<List<NetworkDa
     public void onResume() {
         Log.i(TAG,"onResume");
         super.onResume();
-        networkSearch();
+        //networkSearch();
     }
 
     private void networkSearch() {
@@ -101,6 +104,14 @@ public class NetworkFragment extends Fragment implements Callback<List<NetworkDa
     public void onDetach() {
         Log.i(TAG,"onDetach");
         super.onDetach();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        if(recyclerViewAdapter != null) {
+            recyclerViewAdapter.clearBackGroundWorkingThread();
+        }
     }
 
     @Override
