@@ -4,7 +4,11 @@ import android.util.Log;
 
 public class Service {
     private static final String TAG = Service.class.getSimpleName()+"[ByronLog]";
-    private WorkerThreadPool workerThreadPool = new WorkerThreadPool();
+    private WorkerThreadPool workerThreadPool;
+    public Service() {
+        workerThreadPool = new WorkerThreadPool();
+    }
+
     public void handleRequest(Request request) {
         workerThreadPool.serviceHandleRequest(request);
     }

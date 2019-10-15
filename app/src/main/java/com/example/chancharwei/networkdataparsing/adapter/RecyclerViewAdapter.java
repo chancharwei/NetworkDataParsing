@@ -24,6 +24,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.chancharwei.networkdataparsing.MainActivity;
 import com.example.chancharwei.networkdataparsing.R;
 import com.example.chancharwei.networkdataparsing.networkInfo.NetworkData;
 import com.example.chancharwei.networkdataparsing.threadUse.Request;
@@ -59,18 +60,16 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         for(int i=0;i<loadPositionRecord.length;i++) {
             loadPositionRecord[i] = false;
         }
-        service = new Service();
+        service = ((MainActivity)context).getService();
     }
     @NonNull
     @Override
     public RecyclerViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        //Log.i(TAG,"onCreateViewHolder E");
         int layoutIdForListItem = R.layout.recyclerview_list_item;
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(layoutIdForListItem, parent, false);
         RecyclerViewHolder recyclerViewHolder = new RecyclerViewHolder(view);
-        Log.i(TAG,"onCreateViewHolder X "+recyclerViewHolder);
         return recyclerViewHolder;
     }
 
@@ -124,8 +123,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                                 HttpURLConnection connection;
                                 for(NetworkData data : dataPerGroup) {
                                     if(bitMaps.containsKey(data.getId())) continue;
-                                    Log.i(TAG,"predownload id = "+data.getId());
-                                    //Log.i(TAG,"preDownloadImage2 id = "+data.getId());
+                                    //Log.i(TAG,"predownload id = "+data.getId());
                                     connection = (HttpURLConnection) new URL(data.getThumbnailUrl()).openConnection();
                                     connection.connect();
                                     InputStream inputStream = connection.getInputStream();
@@ -155,7 +153,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
     private void downloadImage(final int id,final ConstraintLayout constraintLayout,final URL imageURL,final boolean updateView) {
-
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -166,8 +163,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     InputStream inputStream = connection.getInputStream();
                     BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
                     Bitmap bmp = BitmapFactory.decodeStream(bufferedInputStream);
-                    //Log.i(TAG,"id = "+id+" constraintLayout = "+constraintLayout);
-                    //Log.i(TAG,"id = "+id+" bitmap = "+bmp);
+                    //Log.i(TAG,"download image from onBindViewHolder id = "+id);
                     bitMaps.put(id,bmp);
                     if(!updateView) return;
                     Contact contact = new Contact(bmp,constraintLayout,id);

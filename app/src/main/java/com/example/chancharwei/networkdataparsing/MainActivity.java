@@ -10,6 +10,7 @@ import android.util.Log;
 
 import com.example.chancharwei.networkdataparsing.fragments.MainFragment;
 import com.example.chancharwei.networkdataparsing.fragments.NetworkFragment;
+import com.example.chancharwei.networkdataparsing.threadUse.Service;
 
 public class MainActivity extends AppCompatActivity implements MainFragment.OnFragmentInteractionListener{
     private static final String TAG = MainActivity.class.getSimpleName()+"[ByronLog]";
@@ -18,7 +19,7 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnFr
     private static final String NETWORK = "Network";
 
     private Fragment mMainFragment,mNetworkFragment;
-
+    private Service service;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.i(TAG,"onCreate "+this);
@@ -27,11 +28,15 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnFr
         mFragmentManager = getSupportFragmentManager();
         if(savedInstanceState == null) {
             initialFragment();
+            service = new Service();
         }else {
             mMainFragment = mFragmentManager.findFragmentByTag(MAIN);
             mNetworkFragment = mFragmentManager.findFragmentByTag(NETWORK);
         }
+    }
 
+    public Service getService() {
+        return (service!=null)?service:null;
     }
 
     private void initialFragment() {

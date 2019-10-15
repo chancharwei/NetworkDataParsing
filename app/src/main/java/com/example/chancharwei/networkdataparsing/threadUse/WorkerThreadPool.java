@@ -10,18 +10,19 @@ import static java.lang.Thread.sleep;
 
 public class WorkerThreadPool {
     private static final String TAG = WorkerThreadPool.class.getSimpleName()+"[ByronLog]";
+    private final int MAX_THREAD_COUNT = 200;
     private List<WorkerThread> workerThreads;
     private boolean isCleaning;
     private final Object lock = new Object();
     WorkerThreadPool() {
-    workerThreads = new ArrayList<>();
-    isCleaning = false;
+        workerThreads = new ArrayList<>();
+        isCleaning = false;
+        createAllThread();
     }
 
     synchronized void serviceHandleRequest(Request request) {
-       final int limitedThreadCount = 100;
        boolean findWorkThread = false;
-       if(workerThreads.size() == limitedThreadCount) {
+       if(workerThreads.size() >= MAX_THREAD_COUNT) {
            while(!findWorkThread) {
                for (WorkerThread workerThread : workerThreads) {
                    if(workerThread.isIdle()) {
@@ -30,7 +31,7 @@ public class WorkerThreadPool {
                        break;
                    } else {
                        try {
-                           sleep(100);
+                           sleep(20);
                        } catch (InterruptedException e) {
                            e.printStackTrace();
                        }
@@ -40,7 +41,8 @@ public class WorkerThreadPool {
        }else {
            synchronized (lock) {
                if(!isCleaning) {
-                   WorkerThread workerThread = createWorkThread();
+                   Log.i(TAG,"new workerThread E size = "+workerThreads.size());
+                   WorkerThread workerThread = createOneWorkThread();
                    Log.i(TAG,"workerThread = "+workerThread+" list size = "+workerThreads.size());
                    workerThread.setRequest(request);
                }
@@ -48,16 +50,28 @@ public class WorkerThreadPool {
        }
     }
 
-    private WorkerThread createWorkThread() {
+    synchronized private WorkerThread createOneWorkThread() {
        WorkerThread workerThread = new WorkerThread();
        workerThread.start();
        workerThreads.add(workerThread);
        try {
-           sleep(100);
+           sleep(20);
        }catch (InterruptedException e){
            e.printStackTrace();
        }
        return workerThread;
+    }
+
+    synchronized private void createAllThread() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(workerThreads.size() <= MAX_THREAD_COUNT) {
+                    WorkerThread workerThread = createOneWorkThread();
+                    Log.i(TAG,"threadPoolSize = "+workerThreads.size()+"thread = "+workerThread);
+                }
+            }
+        }).start();
     }
 
     synchronized void cleanIdle() {
