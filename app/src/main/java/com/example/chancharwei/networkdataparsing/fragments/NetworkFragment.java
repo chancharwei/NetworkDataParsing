@@ -2,46 +2,32 @@ package com.example.chancharwei.networkdataparsing.fragments;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.chancharwei.networkdataparsing.R;
-import com.example.chancharwei.networkdataparsing.RetrofitClient;
+import com.example.chancharwei.networkdataparsing.adapter.NetworkAdapter;
 import com.example.chancharwei.networkdataparsing.adapter.RecyclerViewAdapter;
-import com.example.chancharwei.networkdataparsing.networkInfo.NetworkAPI;
 import com.example.chancharwei.networkdataparsing.networkInfo.NetworkData;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
 
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link NetworkFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class NetworkFragment extends Fragment implements Callback<List<NetworkData>> {
+public class NetworkFragment extends Fragment {
     private static final String TAG = NetworkFragment.class.getSimpleName()+"ByronLog";
-
+    private NetworkAdapter networkAdapter;
     private RecyclerView recyclerView;
     private RecyclerViewAdapter recyclerViewAdapter;
     public NetworkFragment() {
@@ -75,7 +61,8 @@ public class NetworkFragment extends Fragment implements Callback<List<NetworkDa
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
         recyclerViewAdapter = new RecyclerViewAdapter(getActivity(),this);
-        networkSearch();
+        networkAdapter = new NetworkAdapter(this);
+        networkAdapter.networkSearch();
         return root;
     }
 
@@ -83,16 +70,7 @@ public class NetworkFragment extends Fragment implements Callback<List<NetworkDa
     public void onResume() {
         Log.i(TAG,"onResume");
         super.onResume();
-        //networkSearch();
     }
-
-    private void networkSearch() {
-        Retrofit retrofit = RetrofitClient.getInstance();
-        NetworkAPI networkAPI = retrofit.create(NetworkAPI.class);
-        Call<List<NetworkData>> networkCall = networkAPI.getNetworkData();
-        networkCall.enqueue(this);
-    }
-
 
     @Override
     public void onAttach(Context context) {
@@ -109,15 +87,9 @@ public class NetworkFragment extends Fragment implements Callback<List<NetworkDa
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        if(recyclerViewAdapter != null) {
-            recyclerViewAdapter.clearBackGroundWorkingThread();
-        }
     }
 
-    @Override
-    public void onResponse(Call<List<NetworkData>> call, Response<List<NetworkData>> response) {
-        Log.i(TAG,"response code "+response.code());
-        List<NetworkData> networkData = response.body();
+    public void getDataFromNetwork(List<NetworkData> networkData) {
         recyclerViewAdapter.setData(reArrangeData(networkData));
         recyclerView.setAdapter(recyclerViewAdapter);
     }
@@ -139,9 +111,7 @@ public class NetworkFragment extends Fragment implements Callback<List<NetworkDa
         return outputNetworkDataList;
     }
 
-    @Override
-    public void onFailure(Call<List<NetworkData>> call, Throwable t) {
-
+    public Bitmap downloadImage(String imageURL) {
+        return networkAdapter.downloadImage(imageURL);
     }
-
 }

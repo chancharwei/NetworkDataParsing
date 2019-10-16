@@ -1,11 +1,14 @@
 package com.example.chancharwei.networkdataparsing;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import com.example.chancharwei.networkdataparsing.fragments.MainFragment;
@@ -28,11 +31,25 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnFr
         mFragmentManager = getSupportFragmentManager();
         if(savedInstanceState == null) {
             initialFragment();
-            service = new Service();
         }else {
             mMainFragment = mFragmentManager.findFragmentByTag(MAIN);
             mNetworkFragment = mFragmentManager.findFragmentByTag(NETWORK);
         }
+        service = new Service();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(service != null) {
+            service.cleanAllRequest();
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        Log.i(TAG,"onSaveInstanceState");
+        super.onSaveInstanceState(outState);
     }
 
     public Service getService() {
@@ -62,4 +79,6 @@ public class MainActivity extends AppCompatActivity implements MainFragment.OnFr
     public void onFragmentInteraction() {
         startNetworkFragment();
     }
+
+
 }

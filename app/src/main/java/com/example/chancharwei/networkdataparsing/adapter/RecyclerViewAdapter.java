@@ -2,7 +2,6 @@ package com.example.chancharwei.networkdataparsing.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -26,16 +25,11 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.chancharwei.networkdataparsing.MainActivity;
 import com.example.chancharwei.networkdataparsing.R;
+import com.example.chancharwei.networkdataparsing.fragments.NetworkFragment;
 import com.example.chancharwei.networkdataparsing.networkInfo.NetworkData;
 import com.example.chancharwei.networkdataparsing.threadUse.Request;
 import com.example.chancharwei.networkdataparsing.threadUse.Service;
 
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -119,20 +113,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                     Request request = new Request() {
                         @Override
                         public void execute() {
-                            try {
-                                HttpURLConnection connection;
-                                for(NetworkData data : dataPerGroup) {
-                                    if(bitMaps.containsKey(data.getId())) continue;
-                                    //Log.i(TAG,"predownload id = "+data.getId());
-                                    connection = (HttpURLConnection) new URL(data.getThumbnailUrl()).openConnection();
-                                    connection.connect();
-                                    InputStream inputStream = connection.getInputStream();
-                                    BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-                                    Bitmap bmp = BitmapFactory.decodeStream(bufferedInputStream);
+                            for(NetworkData data : dataPerGroup) {
+                                if(bitMaps.containsKey(data.getId())) continue;
+                                Bitmap bmp = ((NetworkFragment)mFragment).downloadImage(data.getThumbnailUrl());
+                                if(bmp != null) {
                                     bitMaps.put(data.getId(),bmp);
                                 }
-                            } catch (IOException e) {
-                                e.printStackTrace();
                             }
                         }
                     };
@@ -142,36 +128,22 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         }).start();
     }
 
-    public void setBackGroundColor(ConstraintLayout constraintLayout,int id,String url) {
-        try {
-            downloadImage(id,constraintLayout,new URL(url),true);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+    private void setBackGroundColor(ConstraintLayout constraintLayout,int id,String url) {
+        executeDownloadImage(id,constraintLayout,url);
         mHandler = new MyHandler();
-
     }
 
-    private void downloadImage(final int id,final ConstraintLayout constraintLayout,final URL imageURL,final boolean updateView) {
+    private void executeDownloadImage(final int id, final ConstraintLayout constraintLayout, final String imageURL) {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                HttpURLConnection connection;
-                try {
-                    connection = (HttpURLConnection) imageURL.openConnection();
-                    connection.connect();
-                    InputStream inputStream = connection.getInputStream();
-                    BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-                    Bitmap bmp = BitmapFactory.decodeStream(bufferedInputStream);
-                    //Log.i(TAG,"download image from onBindViewHolder id = "+id);
+                Bitmap bmp = ((NetworkFragment)mFragment).downloadImage(imageURL);
+                if(bmp != null) {
                     bitMaps.put(id,bmp);
-                    if(!updateView) return;
                     Contact contact = new Contact(bmp,constraintLayout,id);
                     Message message = new Message();
                     message.obj = contact;
                     mHandler.sendMessage(message);
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
             }
         }).start();
@@ -181,7 +153,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         final ConstraintLayout constraintLayout1,constraintLayout2,constraintLayout3,constraintLayout4;
         final ConstraintLayout[] constraintLayoutsGroup;
         final LinearLayout linearLayout;
-        public RecyclerViewHolder(@NonNull View itemView) {
+        private RecyclerViewHolder(@NonNull View itemView) {
             super(itemView);
             linearLayout = itemView.findViewById(R.id.recyclerview_list_item);
             constraintLayoutsGroup = new ConstraintLayout[4];
@@ -230,11 +202,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
                 }
             });
         }
-    }
-
-
-    public void clearBackGroundWorkingThread() {
-        service.cleanAllRequest();
     }
 
     static class MyHandler extends Handler {
@@ -294,7 +261,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         public void writeToParcel(Parcel parcel, int flags) {
             if (bitmap != null) {
                 try {
-                    Parcelable p = (Parcelable)bitmap;
+                    Parcelable p = bitmap;
                     parcel.writeInt(1);
                     parcel.writeParcelable(p,flags);
 
